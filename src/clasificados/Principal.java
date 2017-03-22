@@ -47,6 +47,7 @@ public class Principal extends javax.swing.JFrame {
     private Twitter twitterCarabobo;
     private Twitter twitterZulia;
     private Twitter twitterPanama;
+    private Twitter twitterChile;
     private RequestToken requestToken;
     private Status statusLara;
     private Status statusCaracas;
@@ -55,6 +56,7 @@ public class Principal extends javax.swing.JFrame {
     private Status statusCarabobo;
     private Status statusZulia;
     private Status statusPanama;
+    private Status statusChile;
     private DefaultListModel modeloLara;
     private DefaultListModel modeloCaracas;
     private DefaultListModel modeloMiranda;
@@ -62,6 +64,7 @@ public class Principal extends javax.swing.JFrame {
     private DefaultListModel modeloCarabobo;
     private DefaultListModel modeloZulia;
     private DefaultListModel modeloPanama;
+    private DefaultListModel modeloChile;
     private String driver = "org.postgresql.Driver"; 
     private String connectString = "jdbc:postgresql://localhost:5432/clasificados/"; // ACA PONE DONDE ESTA TU BASE DE DATOS 
     private String user = "postgres"; 
@@ -635,6 +638,87 @@ public class Principal extends javax.swing.JFrame {
         }
         
     }
+   
+   private class HiloChile implements Runnable{
+        @Override
+        public void run() {
+            try {
+                int hora,minuto,segundo;
+                
+                long tiempo;
+                String where = "";
+                int posicion = 0;
+                Statement stmt = null;
+                Connection conn = null;
+                ResultSet rs = null;
+                ResultSet rs1 = null;
+                Class.forName(driver);
+                conn = DriverManager.getConnection(connectString, user, password);
+                stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                rs1 = stmt.executeQuery("select numero from posicion where id = 8");                  
+                if (rs1.next()) {
+                                rs1.beforeFirst();
+                                while(rs1.next()){
+                                    posicion = rs1.getInt(1);
+                                    modeloChile.addElement("Posición: "+rs1.getString(1));
+                                    System.out.println(rs1.getString(1));
+
+                                }
+                            
+                }
+                tiempo = 20*60000;
+                
+                while(true){    
+                        
+                        for(int i = posicion;i<=36;i++){
+                            Calendar calendario = new GregorianCalendar();            
+                            hora =calendario.get(Calendar.HOUR_OF_DAY);
+                            minuto=calendario.get(Calendar.MINUTE);
+                            segundo=calendario.get(Calendar.SECOND);
+                            System.out.println(hora+":"+minuto+":"+segundo);
+                            rs = stmt.executeQuery("select a.anuncio from anuncios a, contactos b where a.numero = "+i+" and a.contacto = b.id and b.chile = true and b.estatus = 'AC'");
+                            if (rs.next()) {
+                                rs.beforeFirst();
+                                while(rs.next()){
+                                try {
+                                    statusChile = twitterChile.updateStatus(rs.getString(1));                                    
+                                    System.out.println(hora+":"+minuto+":"+segundo + " - " + rs.getString(1));
+                                    modeloChile.addElement(hora+":"+minuto+":"+segundo + " - " + rs.getString(1));
+                                } catch (TwitterException ex) {
+                                     modeloChile.addElement(ex.getMessage());
+                                    Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+                                }                                   
+                                    Thread.sleep(2000);
+                                    
+                                    
+
+                                }
+                            
+                            }
+                            
+                            stmt.executeUpdate("update posicion set numero = "+i+" where id = 8");
+                            
+                            Thread.sleep(tiempo);
+                        }
+                        
+                    posicion = 1;
+                }
+            } catch (InterruptedException ex) {
+                modeloChile.addElement(ex.getMessage());
+                Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                modeloChile.addElement(ex.getMessage());
+                Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ClassNotFoundException ex) {
+                modeloChile.addElement(ex.getMessage());
+                Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                
+	    
+                
+        }
+        
+    }
 
     /** This method is called from within the constructor to
      * initialize the form.
@@ -702,6 +786,14 @@ public class Principal extends javax.swing.JFrame {
         jScrollPane7 = new javax.swing.JScrollPane();
         listaPanama = new javax.swing.JList();
         btnIniciarPanama = new javax.swing.JButton();
+        jPanel8 = new javax.swing.JPanel();
+        btnIniciarSesionChile = new javax.swing.JButton();
+        jLabel14 = new javax.swing.JLabel();
+        txtCodigoChile = new javax.swing.JTextField();
+        btnAceptarChile = new javax.swing.JButton();
+        jScrollPane8 = new javax.swing.JScrollPane();
+        listaChile = new javax.swing.JList();
+        btnIniciarChile = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Clasificados");
@@ -799,7 +891,6 @@ public class Principal extends javax.swing.JFrame {
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 885, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -817,7 +908,6 @@ public class Principal extends javax.swing.JFrame {
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 444, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(btnIniciarSesionCaracas)
@@ -863,8 +953,6 @@ public class Principal extends javax.swing.JFrame {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -882,8 +970,6 @@ public class Principal extends javax.swing.JFrame {
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(btnIniciarSesionMiranda)
@@ -929,9 +1015,6 @@ public class Principal extends javax.swing.JFrame {
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -949,9 +1032,6 @@ public class Principal extends javax.swing.JFrame {
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(btnIniciarSesionMerida)
@@ -997,32 +1077,25 @@ public class Principal extends javax.swing.JFrame {
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 855, Short.MAX_VALUE)
                     .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel5Layout.createSequentialGroup()
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnIniciarSesionCarabobo)
+                            .addGroup(jPanel5Layout.createSequentialGroup()
                                 .addComponent(jLabel9)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtCodigoCarabobo))
-                            .addComponent(btnIniciarSesionCarabobo, javax.swing.GroupLayout.Alignment.LEADING))
+                                .addComponent(txtCodigoCarabobo, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnAceptarCarabobo)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 555, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 611, Short.MAX_VALUE)
                         .addComponent(btnIniciarCarabobo)))
                 .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
             .addGap(0, 444, Short.MAX_VALUE)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
@@ -1034,7 +1107,7 @@ public class Principal extends javax.swing.JFrame {
                     .addComponent(btnAceptarCarabobo)
                     .addComponent(btnIniciarCarabobo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 320, Short.MAX_VALUE)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 353, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1069,33 +1142,25 @@ public class Principal extends javax.swing.JFrame {
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 855, Short.MAX_VALUE)
                     .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel6Layout.createSequentialGroup()
                                 .addComponent(jLabel11)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtCodigoZulia))
+                                .addComponent(txtCodigoZulia, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(btnIniciarSesionZulia, javax.swing.GroupLayout.Alignment.LEADING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnAceptarZulia)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 555, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 612, Short.MAX_VALUE)
                         .addComponent(btnIniciarZulia)))
                 .addContainerGap())
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
             .addGap(0, 444, Short.MAX_VALUE)
             .addGap(0, 444, Short.MAX_VALUE)
             .addGroup(jPanel6Layout.createSequentialGroup()
@@ -1108,7 +1173,7 @@ public class Principal extends javax.swing.JFrame {
                     .addComponent(btnAceptarZulia)
                     .addComponent(btnIniciarZulia))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 320, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 353, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1143,34 +1208,25 @@ public class Principal extends javax.swing.JFrame {
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
-            .addGap(0, 885, Short.MAX_VALUE)
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 855, Short.MAX_VALUE)
                     .addGroup(jPanel7Layout.createSequentialGroup()
-                        .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel7Layout.createSequentialGroup()
                                 .addComponent(jLabel13)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtCodigoPanama))
+                                .addComponent(txtCodigoPanama, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(btnIniciarSesionPanama, javax.swing.GroupLayout.Alignment.LEADING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnAceptarPanama)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 555, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 618, Short.MAX_VALUE)
                         .addComponent(btnIniciarPanama)))
                 .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
-            .addGap(0, 444, Short.MAX_VALUE)
             .addGap(0, 444, Short.MAX_VALUE)
             .addGap(0, 444, Short.MAX_VALUE)
             .addGap(0, 444, Short.MAX_VALUE)
@@ -1184,21 +1240,93 @@ public class Principal extends javax.swing.JFrame {
                     .addComponent(btnAceptarPanama)
                     .addComponent(btnIniciarPanama))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 320, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 353, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("Panama", jPanel7);
 
+        btnIniciarSesionChile.setText("Iniciar Sesión");
+        btnIniciarSesionChile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnIniciarSesionChileActionPerformed(evt);
+            }
+        });
+
+        jLabel14.setText("Código");
+
+        btnAceptarChile.setText("Aceptar");
+        btnAceptarChile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAceptarChileActionPerformed(evt);
+            }
+        });
+
+        jScrollPane8.setViewportView(listaChile);
+
+        btnIniciarChile.setText("Iniciar");
+        btnIniciarChile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnIniciarChileActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 865, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(btnIniciarChile)))
+                .addContainerGap())
+            .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel8Layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel8Layout.createSequentialGroup()
+                            .addComponent(jLabel14)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(txtCodigoChile, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(btnIniciarSesionChile, javax.swing.GroupLayout.Alignment.LEADING))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(btnAceptarChile)
+                    .addContainerGap(689, Short.MAX_VALUE)))
+        );
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap(52, Short.MAX_VALUE)
+                .addComponent(btnIniciarChile)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.PREFERRED_SIZE, 353, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+            .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel8Layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(btnIniciarSesionChile)
+                    .addGap(18, 18, 18)
+                    .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel14)
+                        .addComponent(txtCodigoChile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnAceptarChile))
+                    .addContainerGap(375, Short.MAX_VALUE)))
+        );
+
+        jTabbedPane1.addTab("Chile", jPanel8);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 890, Short.MAX_VALUE)
+            .addComponent(jTabbedPane1)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
+            .addComponent(jTabbedPane1)
         );
 
         pack();
@@ -1834,6 +1962,97 @@ private void btnIniciarPanamaActionPerformed(java.awt.event.ActionEvent evt) {//
 new Thread (new HiloPanama()).start();
 }//GEN-LAST:event_btnIniciarPanamaActionPerformed
 
+    private void btnIniciarSesionChileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIniciarSesionChileActionPerformed
+        File file = new File("/app/sistemas/config.properties");
+        Properties prop = new Properties();
+        InputStream is = null;
+        OutputStream os = null;
+        try{
+            if (file.exists()) {
+                is = new FileInputStream(file);
+                prop.load(is);
+
+            }
+        
+            modeloChile = new DefaultListModel();
+            listaChile.setModel(modeloChile);
+            
+            twitterChile = new TwitterFactory().getInstance();
+            modeloChile.addElement("oauth.consumerKey: "+prop.getProperty("oauth.consumerKey"));
+            modeloChile.addElement("oauth.consumerSecret: "+prop.getProperty("oauth.consumerSecret"));
+            System.out.println("oauth.consumerKey: "+prop.getProperty("oauth.consumerKey"));
+            System.out.println("oauth.consumerSecret: "+prop.getProperty("oauth.consumerSecret"));
+            twitterChile.setOAuthConsumer(prop.getProperty("oauth.consumerKey"), prop.getProperty("oauth.consumerSecret"));
+            requestToken = twitterChile.getOAuthRequestToken();	
+            Desktop.getDesktop().browse(new URI(requestToken.getAuthorizationURL()));
+	   
+            
+        } catch (Exception te) {
+            System.out.println("ERROR: " + te.getMessage());
+            modeloChile.addElement("ERROR: " + te.getMessage());
+            
+        }
+    }//GEN-LAST:event_btnIniciarSesionChileActionPerformed
+
+    private void btnAceptarChileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAceptarChileActionPerformed
+        // TODO add your handling code here:
+        try {
+                            // get request token.
+                            // this will throw IllegalStateException if access token is already available
+                            modeloChile.addElement("Token de solicitud conseguido");
+                            modeloChile.addElement("Request token: " + requestToken.getToken());
+                            modeloChile.addElement("Request token secret: " + requestToken.getTokenSecret());
+                            
+                            
+                            System.out.println("Token de solicitud conseguido");
+                            System.out.println("Request token: " + requestToken.getToken());
+                            System.out.println("Request token secret: " + requestToken.getTokenSecret());
+                            AccessToken accessToken = null;
+
+                            
+                            while (null == accessToken) {
+                                modeloChile.addElement("Abra la siguiente URL y permitir el acceso a su cuenta :");
+                                modeloChile.addElement(requestToken.getAuthorizationURL());
+                                System.out.println("Abra la siguiente URL y permitir el acceso a su cuenta :");
+                                System.out.println(requestToken.getAuthorizationURL());
+                                
+                                modeloChile.addElement("Introduzca el Codigo ( si está disponible ) y pulsa aceptar después de que le concede el acceso [ PIN ] .");
+                                System.out.print("Introduzca el Codigo ( si está disponible ) y pulsa aceptar después de que le concede el acceso [ PIN ] .");
+                                String pin = txtCodigoChile.getText();
+                                modeloChile.addElement(pin);
+                                
+                                    if (pin.length() > 0) {
+                                        accessToken = twitterChile.getOAuthAccessToken(requestToken, pin);
+                                    } else {
+                                        accessToken = twitterChile.getOAuthAccessToken(requestToken);
+                                    }
+                            }
+                            modeloChile.addElement("Tienes token de acceso .");
+                            modeloChile.addElement("Access token: " + accessToken.getToken());
+                            modeloChile.addElement("Access token secret: " + accessToken.getTokenSecret());
+                            System.out.println("Tienes token de acceso .");
+                            System.out.println("Access token: " + accessToken.getToken());
+                            System.out.println("Access token secret: " + accessToken.getTokenSecret());
+                } catch (TwitterException te) {
+                      if (401 == te.getStatusCode()) {
+                            modeloChile.addElement("No se puede obtener el token de acceso .");
+                            System.out.println("No se puede obtener el token de acceso .");
+                     } else {
+                          modeloChile.addElement("ERROR "+te.getMessage());
+                          System.out.println("ERROR "+te.getMessage());
+                     }          
+                } catch (IllegalStateException ie) {
+              if (!twitterChile.getAuthorization().isEnabled()) {
+                   modeloChile.addElement("OAuth consumer key/secret no esta establico.");
+                   System.out.println("OAuth consumer key/secret no esta establico.");                               
+             }
+           }
+    }//GEN-LAST:event_btnAceptarChileActionPerformed
+
+    private void btnIniciarChileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIniciarChileActionPerformed
+        new Thread (new HiloChile()).start();
+    }//GEN-LAST:event_btnIniciarChileActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1872,6 +2091,7 @@ new Thread (new HiloPanama()).start();
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAceptarCarabobo;
     private javax.swing.JButton btnAceptarCaracas;
+    private javax.swing.JButton btnAceptarChile;
     private javax.swing.JButton btnAceptarLara;
     private javax.swing.JButton btnAceptarMerida;
     private javax.swing.JButton btnAceptarMiranda;
@@ -1879,12 +2099,14 @@ new Thread (new HiloPanama()).start();
     private javax.swing.JButton btnAceptarZulia;
     private javax.swing.JButton btnIniciarCarabobo;
     private javax.swing.JButton btnIniciarCaracas;
+    private javax.swing.JButton btnIniciarChile;
     private javax.swing.JButton btnIniciarLara;
     private javax.swing.JButton btnIniciarMerida;
     private javax.swing.JButton btnIniciarMiranda;
     private javax.swing.JButton btnIniciarPanama;
     private javax.swing.JButton btnIniciarSesionCarabobo;
     private javax.swing.JButton btnIniciarSesionCaracas;
+    private javax.swing.JButton btnIniciarSesionChile;
     private javax.swing.JButton btnIniciarSesionLara;
     private javax.swing.JButton btnIniciarSesionMerida;
     private javax.swing.JButton btnIniciarSesionMiranda;
@@ -1894,6 +2116,7 @@ new Thread (new HiloPanama()).start();
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel7;
@@ -1905,6 +2128,7 @@ new Thread (new HiloPanama()).start();
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -1912,9 +2136,11 @@ new Thread (new HiloPanama()).start();
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
+    private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JList listaCarabobo;
     private javax.swing.JList listaCaracas;
+    private javax.swing.JList listaChile;
     private javax.swing.JList listaLara;
     private javax.swing.JList listaMerida;
     private javax.swing.JList listaMiranda;
@@ -1922,6 +2148,7 @@ new Thread (new HiloPanama()).start();
     private javax.swing.JList listaZulia;
     private javax.swing.JTextField txtCodigoCarabobo;
     private javax.swing.JTextField txtCodigoCaracas;
+    private javax.swing.JTextField txtCodigoChile;
     private javax.swing.JTextField txtCodigoLara;
     private javax.swing.JTextField txtCodigoMerida;
     private javax.swing.JTextField txtCodigoMiranda;
